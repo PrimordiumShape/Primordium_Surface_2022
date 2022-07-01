@@ -1,0 +1,363 @@
+
+% In this section you may modify the mesh in any way that does not
+% alter the set of nodes.
+
+    if (Steps(m)==0) && m.globalDynamicProps.doinit  % Initialisation code.
+        
+        % define factor to form SAM with the shape of hemisphere
+        id_sam_p = sqrt(m.nodes(:,1).^2 + m.nodes(:,2).^2);
+        id_sam_p = ((max(id_sam_p)- id_sam_p))/max(id_sam_p); % normalise
+        id_sam_l = id_sam_p * id_sam_a;
+        
+        % visualize the entire SAM area
+        v_sam_p(sqrt(m.nodes(:,1).^2+m.nodes(:,2).^2) < 0.9) = 1;
+        
+        % define factors to identify and visualize primordium 
+        ind_radial = sqrt(m.nodes(:,1).^2 + m.nodes(:,2).^2);
+        
+        switch modelname
+            case {'LEAF','pREV_miPRS'}
+                % define factors related with primordium area
+                ind_primordium_disc = find((m.nodes(:,1) > 0.4) & (ind_radial <= 0.85));  
+                v_primordium_p(ind_primordium_disc) = 1; % define primordium area
+                
+                ind_inhibit_line = find((v_primordium_p == 1) & (m.nodes(:,1) < 0.45)); 
+                f_inhibit_p(ind_inhibit_line) = 1; % define the boundary of SAM and adaxial primordium
+                
+                % define factors to produce polarity field 
+                ind_nopolar_area = find((m.nodes(:,1) < 0.35) | (ind_radial > 0.9)); 
+                id_nopolar_p(ind_nopolar_area) = 1; % define the area outside the primordium
+               
+                ind_polarity = find (v_primordium_p==1 & ((m.nodes(:,1) + 0.77).^2 + (m.nodes(:,2)).^2 > 1.42.^2) & ((m.nodes(:,1) + 0.77).^2 + (m.nodes(:,2)).^2 < 1.46.^2)); 
+                f_polarity_p(ind_polarity) = 1;
+                id_org_minus_p( f_polarity_p == 1 ) = 1; % define org- of leaf primordium
+                            
+                ind_boundary_circle = find((v_primordium_p == 1) & ((m.nodes(:,1) < 0.45) | (ind_radial > 0.81))); 
+                f_boundary_p(ind_boundary_circle) = 1;
+                id_org_plus_p (f_boundary_p == 1) = 1; % define org+ of leaf primordium
+                               
+                % define three domains of leaf primordium 
+                ind_ad_area = find (v_primordium_p==1 & ((m.nodes(:,1) + 0.77).^2 + (m.nodes(:,2)).^2 < 1.38.^2));
+                id_ad_p (ind_ad_area) = 1;
+                    
+                ind_mid_area = find (v_primordium_p==1 & ((m.nodes(:,1) + 0.77).^2 + (m.nodes(:,2)).^2 > 1.38.^2) & ((m.nodes(:,1) + 0.77).^2 + (m.nodes(:,2)).^2 < 1.48.^2));
+                id_mid_p (ind_mid_area) = 1;
+                
+                ind_ab_area = find (v_primordium_p==1 &((m.nodes(:,1) + 0.77).^2 + (m.nodes(:,2)).^2 > 1.48.^2));  
+                id_ab_p (ind_ab_area) = 1;  
+            case {'FLOWER'}
+                % define factors related with primordium area
+                ind_primordium_disc = find((m.nodes(:,1) > 0.4) & (ind_radial <= 0.85)); 
+                v_primordium_p(ind_primordium_disc) = 1;  % define primordium area
+                             
+                ind_boundary_circle = find(((m.nodes(:,1) < 0.4) & (m.nodes(:,1) > 0.35) & (ind_radial <= 0.9)) | ((m.nodes(:,1) > 0.4) & (ind_radial > 0.85) & (ind_radial <= 0.9)));
+                f_boundary_p(ind_boundary_circle) = 1; % define the boundary of SAM and entire primordium
+                
+                % define factors to produce polarity field there
+                id_org_minus_p(sqrt((m.nodes(:,1)-0.52).^2 + m.nodes(:,2).^2)  < 0.02) = 1;  % define the adaxial org- of flower primordium
+                id_org_plus_p (f_boundary_p == 1) = 1;  % define org+ of flower primordium                       
+                
+                ind_nopolar_area = find((m.nodes(:,1) < 0.3) | (ind_radial > 0.95)); 
+                id_nopolar_p(ind_nopolar_area) = 1; % define the area outside the primordium
+                              
+                % define two domains of flower primordium
+                ind_ad_area = find (v_primordium_p==1 & ((m.nodes(:,1)).^2 + (m.nodes(:,2)).^2 < 0.72.^2));
+                id_ad_p (ind_ad_area) = 1;
+                        
+                ind_ab_area = find (v_primordium_p==1 &((m.nodes(:,1)).^2  + (m.nodes(:,2)).^2 > 0.72.^2));  
+                id_ab_p (ind_ab_area) = 1;
+              case {'pFIL_PRS','pLFY_amiR_TOR'}
+                % define factors related with primordium area
+                ind_primordium_disc = find((m.nodes(:,1) > 0.4) & (ind_radial <= 0.85)); 
+                v_primordium_p(ind_primordium_disc) = 1;  % define primordium area
+                             
+                ind_boundary_circle = find(((m.nodes(:,1) < 0.4) & (m.nodes(:,1) > 0.35) & (ind_radial <= 0.9)) | ((m.nodes(:,1) > 0.4) & (ind_radial > 0.85) & (ind_radial <= 0.9)));
+                f_boundary_p(ind_boundary_circle) = 1; % define the boundary of SAM and entire primordium
+                
+                % define factors to produce polarity field there
+                id_org_minus_p(sqrt((m.nodes(:,1)-0.52).^2 + m.nodes(:,2).^2)  < 0.02) = 1;  % define the adaxial org- of flower primordium
+                id_org_neg_p(sqrt((m.nodes(:,1)-0.78).^2 + m.nodes(:,2).^2)  < 0.02) = 1;  % define org- of flower primordium in transgenic plants
+                id_org_plus_p (f_boundary_p == 1) = 1;  % define org+ of flower primordium                       
+                
+                ind_nopolar_area = find((m.nodes(:,1) < 0.3) | (ind_radial > 0.95)); 
+                id_nopolar_p(ind_nopolar_area) = 1; % define the area outside the primordium
+                              
+                % define two domains of flower primordium
+                ind_ad_area = find (v_primordium_p==1 & ((m.nodes(:,1)).^2 + (m.nodes(:,2)).^2 < 0.72.^2));
+                id_ad_p (ind_ad_area) = 1;
+                        
+                ind_ab_area = find (v_primordium_p==1 &((m.nodes(:,1)).^2  + (m.nodes(:,2)).^2 > 0.72.^2));  
+                id_ab_p (ind_ab_area) = 1;
+            otherwise
+                % If you reach here, you probably forgot a case.
+        end
+        
+        % fixing x, y and z vertices for the base to prevent base from moving up or down
+        f_border_p(ind_radial > 0.9) = 1;
+        m = leaf_fix_vertex(m,'vertex',find(f_border_p==1),'dfs'); 
+    end
+   
+ 
+    % define different phases according to growth time
+    if (realtime < 10)  % SAM formation phase
+        f_samformation_p = 0.15;
+    else
+        f_samformation_p = 0;
+    end
+    
+    if (realtime >= 10) % promordium growth phase
+        f_development_p = 0.1;
+    else
+        f_development_p = 0;
+    end
+
+
+    % Code common to all models.
+    % @@PRN Polariser Regulatory Network
+        % Every equation to be formatted should end with an at-at Eqn N comment.
+    % @@GRN Gene Regulatory Network
+        % Every equation to be formatted should end with an at-at Eqn N comment.
+    % @@KRN Growth Regulatory Network
+        % Every equation to be formatted should end with an at-at Eqn N comment.
+
+    % Code for specific models.
+    switch modelname
+        case 'LEAF'  
+            % @@PRN Polariser Regulatory Network 
+            if (Steps(m)==0)
+                P(id_org_plus_p == 1) = 1;
+                P(id_org_minus_p == 1) = 0;
+                P(id_nopolar_p == 1) = 0;
+                m.morphogenclamp((id_org_plus_p == 1),polariser_i) = 1; % double(sourcenodes);
+                m.morphogenclamp((id_org_minus_p==1),polariser_i) = 1; % double(sourcenodes);
+                m.morphogenclamp((id_nopolar_p == 1),polariser_i) = 1; % double(sourcenodes);
+            end
+            m = leaf_mgen_conductivity( m, 'POLARISER', 0.002);  % diffusion rate
+            m = leaf_mgen_absorption( m, 'POLARISER', 0);  % degradation rate
+            m = leaf_setproperty(m,'mingradient',0.1); % i.e. threshold for using polariser gradient
+            
+            % @@GRN Gene Regulatory Network
+            d_sym = abs(m.nodes(:,2));
+            gradient_1 = 1 .* (1 - d_sym);
+            gradient_2 = 10 .* (0.1 - d_sym .^2);
+
+            d_gra = sqrt((m.nodes(:,1).^2 + m.nodes(:,2).^2));
+            line_gradient = (d_gra - 0.3).^3;
+           
+            if (realtime <= 10)
+                kapar_p = f_samformation_p .* 0.4 .* id_sam_l;
+                kaper_p = kapar_p ; 
+            elseif (10 < realtime && realtime <= 20) % stage 1
+                id_g_p (find(v_primordium_p==1)) = 2;
+                id_g_l = id_g_p .* id_g_a;
+            
+                id_mid_l = (1) .* (gradient_1 + gradient_2).* id_mid_p .* id_mid_a;
+                id_ad_l = (-1.9) .* id_ad_p .* id_ad_a;
+                id_ab_l = (-1.5) .* id_ab_p .* id_ab_a;   
+                
+                id_inh_p(f_inhibit_p==1)= -3;
+                id_inh_l = id_inh_p .* id_inh_a;
+                
+                kapar_p = 0.3 .* f_development_p .* (id_g_l + id_mid_l + id_ad_l + id_ab_l + id_inh_l);
+                kaper_p = kapar_p; 
+            elseif (20 < realtime && realtime <= 30)  % stage 2
+                id_g_p (find(v_primordium_p==1)) = 1.2; 
+                id_g_l = id_g_p .* id_g_a; 
+                
+                id_inh_p (f_inhibit_p==1) = -2;
+                id_inh_l = id_inh_p .* id_inh_a;
+                
+                kapar_p = f_development_p .* (line_gradient .* id_g_l + id_inh_l);
+                kaper_p = 0.3 .* f_development_p .* id_g_l ; 
+            else  % stage 3
+                id_g_p (find(v_primordium_p==1)) = 0.5; 
+                id_g_l = id_g_p .* id_g_a; 
+                
+                id_inh_p (f_inhibit_p==1) = -1;
+                id_inh_l = id_inh_p .* id_inh_a;
+                
+                kapar_p = f_development_p .* (line_gradient .* id_g_l + id_inh_l);
+                kaper_p = 0.2 .* f_development_p .* id_g_l ;  
+            end
+
+            % @@KRN Growth Regulatory Network     
+            kbpar_p = kapar_p; 
+            kbper_p = kaper_p; 
+            knor_p  = 0; 
+        case 'pREV_miPRS'  
+            % @@PRN Polariser Regulatory Network 
+            if (Steps(m)==0)
+                P(id_org_plus_p == 1) = 1;
+                P(id_org_minus_p == 1) = 0;
+                P(id_nopolar_p == 1) = 0;
+                m.morphogenclamp((id_org_plus_p == 1),polariser_i) = 1; % double(sourcenodes);
+                m.morphogenclamp((id_org_minus_p==1),polariser_i) = 1; % double(sourcenodes);
+                m.morphogenclamp((id_nopolar_p == 1),polariser_i) = 1; % double(sourcenodes);
+            end
+            m = leaf_mgen_conductivity( m, 'POLARISER', 0.002);  % diffusion rate
+            m = leaf_mgen_absorption( m, 'POLARISER', 0);  % degradation rate
+            m = leaf_setproperty(m,'mingradient',0.1); % i.e. threshold for using polariser gradient
+            
+            % @@GRN Gene Regulatory Network       
+            if (realtime <= 10)
+                kapar_p = f_samformation_p .* 0.4 .* id_sam_l;
+                kaper_p = kapar_p ;          
+            else
+                id_g_p (find(v_primordium_p==1)) = 1;
+                id_g_l = id_g_p .* id_g_a;
+            
+                id_mid_l = (0) .* id_mid_p .* id_mid_a;
+                id_ad_l = (0).* id_ad_p .* id_ad_a;
+                id_ab_l = (-0.5) .* id_ab_p .* id_ab_a;   
+                
+                id_inh_p(f_inhibit_p==1)= -3;
+                id_inh_l = id_inh_p .* id_inh_a;
+                
+                kapar_p = 0.5 .* f_development_p .* (id_g_l + id_mid_l + id_ad_l + id_ab_l + id_inh_l);
+                kaper_p = 0.2 .* f_development_p .* (id_g_l + id_inh_l + id_ab_l);    
+            end
+
+            % @@KRN Growth Regulatory Network     
+            kbpar_p = kapar_p; 
+            kbper_p = kaper_p; 
+            knor_p  = 0;
+        case 'FLOWER'  
+            % @@PRN Polariser Regulatory Network     
+            if (Steps(m)==0) 
+                P(id_org_plus_p == 1) = 1;
+                P(id_org_minus_p == 1) = 0;
+                P(id_nopolar_p == 1) = 0;
+                m.morphogenclamp((id_org_plus_p == 1),polariser_i) = 1; % double(sourcenodes);
+                m.morphogenclamp((id_org_minus_p==1),polariser_i) = 1; % double(sourcenodes);
+                m.morphogenclamp((id_nopolar_p == 1),polariser_i) = 1; % double(sourcenodes);
+            end
+        
+            m = leaf_mgen_conductivity( m, 'POLARISER', 0.002);  % diffusion rate
+            m = leaf_mgen_absorption( m, 'POLARISER', 0);  % degradation rate
+            m = leaf_setproperty(m,'mingradient',0.1); % i.e. threshold for using polariser gradient
+
+            % @@GRN Gene Regulatory Network                    
+            if (realtime <= 10)
+                kapar_p = f_samformation_p .* 0.4 .* id_sam_l;
+                kaper_p = kapar_p ; 
+            else
+                id_g_p (v_primordium_p==1) = 0.5;
+                id_g_l = id_g_p .* id_g_a;
+                
+                id_inh_p (f_boundary_p==1) = -1.5;
+                id_inh_l = id_inh_p .* id_inh_a;
+                
+                id_ad_l = (0.2).* id_ad_p .* id_ad_a;
+                id_ab_l = (0.1).* id_ab_p .* id_ab_a;   
+                
+                kapar_p = 0.4 .* f_development_p .* (id_g_l + id_ad_l + id_ab_l+ id_inh_l);
+                kaper_p = 0.4 .* f_development_p .* (0.3 .* id_g_l + 1.5 .* id_ad_l + 2.5 .* id_ab_l+ id_inh_l);
+            end
+            
+            % @@KRN Growth Regulatory Network
+            kbpar_p = kapar_p; 
+            kbper_p = kaper_p;  
+            knor_p  = 0;   
+        case 'pFIL_PRS'  % Flower transgene line 1                 
+            % @@PRN Polariser Regulatory Network                             
+            if (Steps(m)==0 ) 
+                P(id_org_plus_p == 1) = 1;
+                P(id_org_minus_p == 1) = 0;
+                P(id_nopolar_p == 1) = 0;
+                m.morphogenclamp((id_org_plus_p == 1),polariser_i) = 1; % double(sourcenodes);
+                m.morphogenclamp((id_org_minus_p==1),polariser_i) = 1; % double(sourcenodes);
+                m.morphogenclamp((id_nopolar_p == 1),polariser_i) = 1; % double(sourcenodes);
+            end
+            
+            if (Steps(m)> 19) % add a second polarity sink point at stage 2 of primordium growth phase 
+                P(id_org_plus_p == 1) = 1;
+                P(id_org_minus_p == 1) = 0;
+                P(id_org_neg_p == 1) = 0;
+                P(id_nopolar_p == 1) = 0;
+                m.morphogenclamp((id_org_plus_p == 1),polariser_i) = 1; % double(sourcenodes);
+                m.morphogenclamp((id_org_minus_p==1),polariser_i) = 1; % double(sourcenodes);
+                m.morphogenclamp((id_org_neg_p==1),polariser_i) = 1; % double(sourcenodes);
+                m.morphogenclamp((id_nopolar_p == 1),polariser_i) = 1; % double(sourcenodes);
+            end
+            
+            m = leaf_mgen_conductivity( m, 'POLARISER', 0.005);  % diffusion rate
+            m = leaf_mgen_absorption( m, 'POLARISER', 0);  % degradation rate
+            m = leaf_setproperty(m,'mingradient',0.1); % i.e. threshold for using polariser gradient
+
+            % @@GRN Gene Regulatory Network
+            if (realtime <= 10)
+                kapar_p = f_samformation_p .* 0.4 .* id_sam_l;
+                kaper_p = kapar_p ; 
+            elseif (10 < realtime && realtime <= 19)  % stage 1
+                id_g_p (v_primordium_p==1) = 0.5;
+                id_g_l = id_g_p .* id_g_a;
+                
+                id_inh_p (f_boundary_p==1) = -1.5;
+                id_inh_l = id_inh_p .* id_inh_a;
+                
+                id_ad_l = (0.2).* id_ad_p .* id_ad_a;
+                id_ab_l = (0.1).* id_ab_p .* id_ab_a;   
+                
+                kapar_p = 0.4 .* f_development_p .* (id_g_l + id_ad_l + id_ab_l+ id_inh_l);
+                kaper_p = 0.4 .* f_development_p .* (0.3 .* id_g_l + 1.5 .* id_ad_l + 2.5 .* id_ab_l+ id_inh_l);
+            else  % stage 2
+                id_g_p (v_primordium_p==1) = 0.3;
+                id_g_l = id_g_p .* id_g_a;
+                
+                id_inh_p (f_boundary_p==1) = -1.5;
+                id_inh_l = id_inh_p .* id_inh_a;
+                
+                id_ad_l = (0.2).* id_ad_p .* id_ad_a;
+                id_ab_l = (1.5).* id_ab_p .* id_ab_a;   
+                
+                kapar_p = 0.4 .* f_development_p .* ( id_g_l + id_ad_l + (1.2 - P.^3) .* id_ab_l+ id_inh_l);
+                kaper_p = kapar_p ;
+            end
+            
+            % @@KRN Growth Regulatory Network
+            kbpar_p = kapar_p; 
+            kbper_p = kaper_p;  
+            knor_p  = 0;  
+       case 'pLFY_amiR_TOR'  % Flower transgene line 2
+            % @@PRN Polariser Regulatory Network 
+            if (Steps(m)==0)
+                P(id_org_plus_p == 1) = 1;
+                P(id_org_minus_p == 1) = 0;
+                P(id_org_neg_p == 1) = 0;
+                P(id_nopolar_p == 1) = 0;
+                m.morphogenclamp((id_org_plus_p == 1),polariser_i) = 1; % double(sourcenodes);
+                m.morphogenclamp((id_org_minus_p==1),polariser_i) = 1; % double(sourcenodes);
+                m.morphogenclamp((id_org_neg_p==1),polariser_i) = 1; % double(sourcenodes);
+                m.morphogenclamp((id_nopolar_p == 1),polariser_i) = 1; % double(sourcenodes);
+            end
+            
+            m = leaf_mgen_conductivity( m, 'POLARISER', 0.005);  % diffusion rate
+            m = leaf_mgen_absorption( m, 'POLARISER', 0);  % degradation rate
+            m = leaf_setproperty(m,'mingradient',0.1); % i.e. threshold for using polariser gradient
+
+            % @@GRN Gene Regulatory Network: normal 
+            if (realtime <= 10)
+                kapar_p = f_samformation_p .* 0.4 .* id_sam_l;
+                kaper_p = kapar_p ; 
+            else
+                id_g_p (v_primordium_p==1) = 0.5;
+                id_g_l = id_g_p .* id_g_a;
+                
+                id_inh_p (f_boundary_p==1) = -1;
+                id_inh_l = id_inh_p .* id_inh_a;
+                
+                id_ad_l = (0.1).* id_ad_p .* id_ad_a;
+%                 id_ab_l = (0.4).* id_ab_p .* id_ab_a;  % flatten
+                id_ab_l = (1).* id_ab_p .* id_ab_a;  % bulge
+                
+                kapar_p = 0.3 .* f_development_p .* (id_g_l + id_ad_l + (1.3 - P).* id_ab_l + id_inh_l);
+                kaper_p = kapar_p ;
+            end
+            
+            % @@KRN Growth Regulatory Network
+            kbpar_p = kapar_p; 
+            kbper_p = kaper_p;  
+            knor_p  = 0;  
+        otherwise
+            % If this happens, maybe you forgot a model.
+    end
